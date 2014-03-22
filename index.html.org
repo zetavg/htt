@@ -38,8 +38,8 @@
         content: 'Last updated: ';
       }
       @media (max-width: 767px) {
-        .item .date::before {
-          content: '';
+        #site-list {
+          margin-top: 20px;
         }
       }
       @media (max-width: 600px) {
