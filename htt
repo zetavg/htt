@@ -34,7 +34,7 @@ if [[ $1 = 'clone' ]]; then
   cp index.html index.html.tmp
   sed "s/<\!-- END SITES -->/<a href=\"$SITEID\/index.html\">\\`echo -e '\n\r'`<div class=\"item\">\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"favicon.png\">\\`echo -e '\n\r'`<div class=\"content\">\\`echo -e '\n\r'`<div class=\"header title\">$SITETITLE_C<\/div>\\`echo -e '\n\r'`<div class=\"description\">$SITEDESCRIPTION_C<\/div>\\`echo -e '\n\r'`<div class=\"url\">$SITEURL_C<\/div>\\`echo -e '\n\r'`<div class=\"date\">\?<\/div>\\`echo -e '\n\r'`<\/div>\\`echo -e '\n\r'`<\/div>\\`echo -e '\n\r'`<\/a>\\`echo -e '\n\r'`<\!-- END SITES -->/g" index.html.tmp > index.html
   echo "Starting HTTrack"
-  httrack -r2 -c8 -Y -m2000000 -n -%i -%I -q -z -w "$SITEURL" -O "$SITEID"
+  httrack -r3 -c8 -Y -m2000000 -n -%i -%I -q -z -w "$SITEURL" -O "$SITEID"
   LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
   cp index.html index.html.tmp
   if [[ -n $LINE ]]; then
