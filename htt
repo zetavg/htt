@@ -45,7 +45,7 @@ if [[ $1 = 'clone' ]]; then
       cp index.html index.html.tmp
       sed "$(expr $LINE + 2)d" index.html.tmp > index.html
       cp index.html index.html.tmp
-      sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
+      sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
     fi
   fi
   echo "Done."
@@ -67,7 +67,7 @@ elif [[ $1 = 'update' ]]; then
         cp index.html index.html.tmp
         sed "$(expr $LINE + 2)d" index.html.tmp > index.html
         cp index.html index.html.tmp
-        sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
+        sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
       fi
     fi
     echo "Done."
