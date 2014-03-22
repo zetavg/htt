@@ -1,0 +1,109 @@
+#! /bin/bash
+# htt - HTTrack with ease
+# Usage: htt [clone|update|rm] URL
+#
+
+SCRIPT=$(readlink "$0")
+BASEDIR=$(dirname "$SCRIPT")
+DATE=$(date +"%Y-%m-%d")
+cd "$BASEDIR"
+if [[ ! -e "index.html" ]]; then
+  cp "index.html.org" "index.html"
+fi
+
+if [[ $1 = 'clone' ]]; then
+  SITEURL="$2"
+  SITEURL_C=$(echo $SITEURL | sed 's/\//\\\//g')
+  echo "Cloning $SITEURL with HTTrack ..."
+  SITEHTML=$(curl "$SITEURL")
+  echo "Site URL: $SITEURL"
+  SITEID=$(echo "$SITEURL" | sed 's/http:\/\///g' | sed 's/\/$//g' | sed 's/\//-/g')
+  echo "Site ID: $SITEID"
+  SITETITLE=$(echo "$SITEHTML" | grep -o -E '<title>(.*)<\/title>' | sed 's/<title>//g' | sed 's/<\/title>//g')
+  SITETITLE_C=$(echo $SITETITLE | sed 's/\//\\\//g')
+  echo "Site Title: $SITETITLE"
+  SITEDESCRIPTION=$(echo "$SITEHTML" | grep -o -E '<meta name="[dD]escription" content="([^"]*)"' | sed 's/<meta name="[dD]escription" content="//g' | sed 's/"//g')
+  SITEDESCRIPTION_C=$(echo $SITEDESCRIPTION | sed 's/\//\\\//g')
+  echo "Site Description: $SITEDESCRIPTION"
+  if [[ -e "$SITEID" ]] ; then
+    echo "error: directory \"$SITEID\" already exists! terminating."
+    exit -1
+  fi
+  echo "Adding new site to index"
+  cp index.html index.html.bak
+  cp index.html index.html.tmp
+  sed "s/<\!-- END SITES -->/<a href=\"$SITEID\/index.html\">\\`echo -e '\n\r'`<div class=\"item\">\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"favicon.png\">\\`echo -e '\n\r'`<div class=\"content\">\\`echo -e '\n\r'`<div class=\"header title\">$SITETITLE_C<\/div>\\`echo -e '\n\r'`<div class=\"description\">$SITEDESCRIPTION_C<\/div>\\`echo -e '\n\r'`<div class=\"url\">$SITEURL_C<\/div>\\`echo -e '\n\r'`<div class=\"date\">\?<\/div>\\`echo -e '\n\r'`<\/div>\\`echo -e '\n\r'`<\/div>\\`echo -e '\n\r'`<\/a>\\`echo -e '\n\r'`<\!-- END SITES -->/g" index.html.tmp > index.html
+  echo "Starting HTTrack"
+  httrack -r2 -c8 -Y -m2000000 -n -%i -%I -q -z -w "$SITEURL" -O "$SITEID"
+  LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+  cp index.html index.html.tmp
+  if [[ -n $LINE ]]; then
+    sed "$(expr $LINE + 7)d" index.html.tmp > index.html
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 6)a\\`echo -e '\n\r'`<div class=\"date\">$DATE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
+    if [[ -e "$SITEID/favicon.ico" ]] ; then
+      cp index.html index.html.tmp
+      sed "$(expr $LINE + 2)d" index.html.tmp > index.html
+      cp index.html index.html.tmp
+      sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
+    fi
+  fi
+  echo "Done."
+
+elif [[ $1 = 'update' ]]; then
+  SITEID="$2"
+  echo 'Updating $SITEID with HTTrack ...'
+  if [[ -e "$SITEID" ]] ; then
+    cd "$SITEID"
+    httrack --update
+    LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+    cp index.html index.html.bak
+    if [[ -n $LINE ]]; then
+      cp index.html index.html.tmp
+      sed "$(expr $LINE + 7)d" index.html.tmp > index.html
+      cp index.html index.html.tmp
+      sed "$(expr $LINE + 6)a\\`echo -e '\n\r'`<div class=\"date\">$DATE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
+      if [[ -e "$SITEID/favicon.ico" ]] ; then
+        cp index.html index.html.tmp
+        sed "$(expr $LINE + 2)d" index.html.tmp > index.html
+        cp index.html index.html.tmp
+        sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
+      fi
+    fi
+    echo "Done."
+  else
+    echo "Site \"$SITEID\" doesn't exists!"
+    exit -1
+  fi
+
+elif [[ $1 = 'rm' ]]; then
+  SITEID="$2"
+  if [[ $SITEID = 'css' || $SITEID = 'fonts' || $SITEID = 'js' || $SITEID = 'img' || $SITEID = 'htt' || $SITEID = 'favicon.png' ]]; then
+    echo "Invalid parameter."
+    exit -1
+  fi
+  if [[ -e "$SITEID" ]] ; then
+    read -p "Are you sure? (y/n): " R
+    if [[ $R = 'y' ]]; then
+      LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+      cp index.html index.html.bak
+      if [[ -n $LINE ]]; then
+        rm -rf "$SITEID"
+        cp index.html index.html.tmp
+        sed "$LINE,$(expr $LINE + 10)d" index.html.tmp > index.html
+      else
+        echo "Cannot find site in index."
+        exit -1
+      fi
+      echo "Done."
+    else
+      echo "Aborting."
+    fi
+  else
+    echo "Site \"$SITEID\" doesn't exists!"
+    exit -1
+  fi
+
+else
+  echo 'Usage: htt [clone|update|rm] URL'
+fi

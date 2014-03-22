@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>WebPages</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="css/semantic.min.css">
+    <style>
+      #site-list {
+        margin-top: 80px;
+      }
+      .item {
+        position: relative;
+      }
+      .item .content {
+        max-width: 80%;
+      }
+      .item .title {
+        font-size: 18px;
+        color: #333;
+      }
+      .item .url {
+        font-size: 14px;
+      }
+      .item .date {
+        font-size: 14px;
+        text-align: right;
+        float: right;
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 8px;
+      }
+      .item .date::before {
+        content: 'Last updated: ';
+      }
+      @media (max-width: 767px) {
+        .item .date::before {
+          content: '';
+        }
+      }
+      @media (max-width: 600px) {
+        .item .date::before {
+          content: '';
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="site-list" class="ui page grid aligned stackable divided">
+      <div class="row">
+        <div class="four wide column">
+          <div class="ui form segment">
+            <div class="field">
+              <div class="ui fluid icon input"><i class="search icon"></i><input type="text" class="fuzzy-search" placeholder="Search..."></div>
+            </div>
+            <div class="field">
+              <label>Sort By:</label>
+              <div class="ui selection dropdown">
+                <input type="hidden" name="gender">
+                <div class="default text">Title</div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                  <div class="item sort" data-sort="title" data-value="1">Title</div>
+                  <div class="item sort" data-sort="date" data-value="0">Date</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ten wide column">
+          <div class="ui selection list">
+<!-- END SITES -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/semantic.min.js"></script>
+    <script src="js/list.js"></script>
+    <script src="js/list.fuzzysearch.js"></script>
+    <script>
+      $(document).ready(function() {
+        var siteList = new List('site-list', {
+          valueNames: ['title', 'description', 'date'],
+          item: '<li><h3 class="name"></h3><p class="born"></p></li>',
+          plugins: [ ListFuzzySearch() ]
+        });
+        siteList.sort('title', { order: "asc" });
+        $('.ui.dropdown').dropdown();
+      });
+    </script>
+  </body>
+</html>
