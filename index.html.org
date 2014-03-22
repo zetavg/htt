@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>WebPages</title>
+    <title>WebSites</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="favicon.png">
@@ -11,11 +11,16 @@
     <style>
       #site-list {
         margin-top: 80px;
+        margin-bottom: 80px;
+      }
+      .list > a {
+        display: block;
+        padding-bottom: 8px;
       }
       .item {
         position: relative;
       }
-      .item .content {
+      .item > .content {
         max-width: 80%;
       }
       .item .title {
@@ -37,9 +42,59 @@
       .item .date::before {
         content: 'Last updated: ';
       }
+      .item .actions {
+        text-decoration: none;
+        position: absolute;
+        width: 100%;
+        text-align: right;
+        right: 0;
+        bottom: 0;
+      }
+      .item .actions a {
+        text-decoration: none;
+        opacity: 0;
+      }
+      .item:hover .actions a {
+        opacity: 0.5;
+      }
+      .item .actions a:hover {
+        opacity: 1;
+      }
+      .item .actions .popup {
+        cursor: text;
+        text-align: left;
+        line-height: 24px;
+        -webkit-user-select: all;
+        -moz-user-select: all;
+        -ms-user-select: all;
+        user-select: all;
+        width: 480px;
+        max-width: 90% !important;
+        margin-right: -34px !important;
+        background-color: #fafafa;
+        border-top-width: 10px;
+        -webkit-box-shadow: 1px 1px 10px rgba(0,0,0,.24);
+        box-shadow: 1px 1px 10px rgba(0,0,0,.24);
+      }
+      .item .actions .popup::before {
+        background-color: #fafafa;
+      }
+      code, .code {
+        padding: 2px 4px;
+        color: #d14;
+        white-space: nowrap;
+        background-color: #f7f7f9;
+        border: 1px solid #e1e1e8;
+        font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+        font-size: 12px;
+        -webkit-border-radius: 3px;
+        -moz-border-radius: 3px;
+        border-radius: 3px;
+      }
       @media (max-width: 767px) {
         #site-list {
           margin-top: 20px;
+          margin-bottom: 20px;
         }
       }
       @media (max-width: 600px) {
@@ -55,10 +110,10 @@
         <div class="four wide column">
           <div class="ui form segment">
             <div class="field">
-              <div class="ui fluid icon input"><i class="search icon"></i><input type="text" class="fuzzy-search" placeholder="Search..."></div>
+              <div class="ui fluid icon input"><i class="search icon"></i><input type="text" class="fuzzy-search" placeholder="Search..." autofocus></div>
             </div>
             <div class="field">
-              <label>Sort By:</label>
+              <label><i class="reorder icon"></i>Sort By:</label>
               <div class="ui selection dropdown">
                 <input type="hidden" name="gender">
                 <div class="default text">Title</div>
@@ -78,11 +133,29 @@
         </div>
       </div>
     </div>
-
     <script src="js/jquery.min.js"></script>
     <script src="js/semantic.min.js"></script>
     <script src="js/list.js"></script>
     <script src="js/list.fuzzysearch.js"></script>
+    <script>
+      jQuery.fn.selectText = function(){
+        var doc = document
+          , element = this[0]
+          , range, selection
+        ;
+        if (doc.body.createTextRange) {
+          range = document.body.createTextRange();
+          range.moveToElementText(element);
+          range.select();
+        } else if (window.getSelection) {
+          selection = window.getSelection();
+          range = document.createRange();
+          range.selectNodeContents(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      };
+    </script>
     <script>
       $(document).ready(function() {
         var siteList = new List('site-list', {
@@ -92,6 +165,44 @@
         });
         siteList.sort('title', { order: "asc" });
         $('.ui.dropdown').dropdown();
+        var pathname = $(location).attr('pathname');
+        pathname = pathname.replace('/index.html', '');
+        pathname = decodeURIComponent(pathname);
+        pathname = pathname.replace(' ', '\\ ');
+        $('.list').children('a').each(function(index) {
+          var href = $(this).attr('href');
+          var id = href.replace('/index.html', '');
+          $(this).attr('id', id);
+          var url = $(this).find('.url').html();
+          $(this).find('.item').append('<div class="actions"><a href="javascript:void(0)" class="setting"><i class="large setting icon"></i></a><a href="' + href + '" target="_blank" class="url"><i class="large external url icon"></i></a><a href="' + url + '" target="_blank" class="globe"><i class="large external globe icon"></i></a></div>');
+          $(this).find('.actions .setting').popup({
+            on: 'click',
+            inline: true,
+            position: 'top left',
+            transition: 'fade up',
+            title : 'Actions (execute them in terminal)',
+            content : '<p>First, <span class="code"><span class="autoSelect">cd ' + pathname + '</span></span></p><p><i class="refresh icon"></i>Update: <span class="code"><span class="autoSelect">./htt update ' + id + '</span></span><br><i class="pencil icon"></i>Rename: <span class="code"><span class="autoSelect">./htt title ' + id + ' </span>&lt;title&gt;</span><br><i class="edit icon"></i>Edit description: <span class="code"><span class="autoSelect">./htt description ' + id + ' </span>&lt;description&gt;</span><br><i class="photo icon"></i>Change icon: <span class="code"><span class="autoSelect">./htt icon ' + id + ' </span>&lt;icon path&gt;</span><br><i class="wrench icon"></i>Config: <span class="code"><span class="autoSelect">./htt vi ' + id + '</span></span><br><i class="trash icon"></i>Delete: <span class="code"><span class="autoSelect">./htt rm ' + id + '</span></span><br></p>'
+          });
+        });
+        $('.actions .setting').on('click', function (e) {
+          $('div.list .popup').mouseenter(function() {
+            $('div.list > a').on('click', function (e) {
+              e.preventDefault();
+            });
+          });
+          $('div.list .popup').mouseleave(function() {
+            $('div.list > a').unbind('click');
+          });
+          $('code').click(function (e) {
+            $(this).selectText();
+          });
+          $('.autoSelect').click(function (e) {
+            $(this).selectText();
+          });
+        });
+        $('div.list > a').mouseleave(function() {
+          $('.actions .setting').popup('remove');
+        });
       });
     </script>
   </body>

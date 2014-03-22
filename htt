@@ -1,6 +1,6 @@
 #! /bin/bash
 # htt - HTTrack with ease
-# Usage: htt [clone|update|rm] URL
+# Usage: htt [clone|update|rm|vi|title|description|icon] URL
 #
 
 SCRIPT=$(readlink "$0")
@@ -13,17 +13,20 @@ fi
 
 if [[ $1 = 'clone' ]]; then
   SITEURL="$2"
-  SITEURL_C=$(echo $SITEURL | sed 's/\//\\\//g')
+  SITEURL_C=$(echo $SITEURL | sed 's/\//\\\//g' | sed 's/&/\\&/g' | sed 's/#/_/g')
   echo "Cloning $SITEURL with HTTrack ..."
   SITEHTML=$(curl "$SITEURL")
   echo "Site URL: $SITEURL"
-  SITEID=$(echo "$SITEURL" | sed 's/http:\/\///g' | sed 's/\/$//g' | sed 's/\//-/g')
+  SITEID=$(echo "$SITEURL" | sed 's/http:\/\///g' | sed 's/\/$//g' | sed 's/\//-/g' | sed 's/[#&]/_/g')
   echo "Site ID: $SITEID"
   SITETITLE=$(echo "$SITEHTML" | grep -o -E '<title>(.*)<\/title>' | sed 's/<title>//g' | sed 's/<\/title>//g')
-  SITETITLE_C=$(echo $SITETITLE | sed 's/\//\\\//g')
+  if [[ ! -n $SITETITLE ]]; then
+    SITETITLE="NEW SITE"
+  fi
+  SITETITLE_C=$(echo $SITETITLE | sed 's/\//\\\//g' | sed 's/&/\\&/g' | sed 's/#/_/g')
   echo "Site Title: $SITETITLE"
   SITEDESCRIPTION=$(echo "$SITEHTML" | grep -o -E '<meta name="[dD]escription" content="([^"]*)"' | sed 's/<meta name="[dD]escription" content="//g' | sed 's/"//g')
-  SITEDESCRIPTION_C=$(echo $SITEDESCRIPTION | sed 's/\//\\\//g')
+  SITEDESCRIPTION_C=$(echo $SITEDESCRIPTION | sed 's/\//\\\//g' | sed 's/&/\&/g')
   echo "Site Description: $SITEDESCRIPTION"
   if [[ -e "$SITEID" ]] ; then
     echo "error: directory \"$SITEID\" already exists! terminating."
@@ -52,7 +55,7 @@ if [[ $1 = 'clone' ]]; then
 
 elif [[ $1 = 'update' ]]; then
   SITEID="$2"
-  echo 'Updating $SITEID with HTTrack ...'
+  echo "Updating $SITEID with HTTrack ..."
   if [[ -e "$SITEID" ]] ; then
     cd "$SITEID"
     httrack --update
@@ -63,18 +66,64 @@ elif [[ $1 = 'update' ]]; then
       sed "$(expr $LINE + 7)d" index.html.tmp > index.html
       cp index.html index.html.tmp
       sed "$(expr $LINE + 6)a\\`echo -e '\n\r'`<div class=\"date\">$DATE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
-      if [[ -e "$SITEID/$SITEID/favicon.ico" ]] ; then
-        cp index.html index.html.tmp
-        sed "$(expr $LINE + 2)d" index.html.tmp > index.html
-        cp index.html index.html.tmp
-        sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$SITEID\/$SITEID\/favicon.ico\">\\`echo -e '\n\r'`" index.html.tmp > index.html
-      fi
     fi
     echo "Done."
   else
     echo "Site \"$SITEID\" doesn't exists!"
     exit -1
   fi
+
+elif [[ $1 = 'title' ]]; then
+  SITEID="$2"
+  TITLE="$3"
+  TITLE=$(echo $TITLE | sed 's/\//\\\//g' | sed 's/&/\\&/g' | sed 's/#/_/g')
+  LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+  cp index.html index.html.bak
+  if [[ -n $LINE ]]; then
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 4)d" index.html.tmp > index.html
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 3)a\\`echo -e '\n\r'`<div class=\"header title\">$TITLE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
+  else
+    echo "Site \"$SITEID\" doesn't exists!"
+    exit -1
+  fi
+  echo "Done."
+
+elif [[ $1 = 'description' ]]; then
+  SITEID="$2"
+  DESCRIPTION="$3"
+  DESCRIPTION=$(echo $DESCRIPTION | sed 's/\//\\\//g' | sed 's/&/\\&/g' | sed 's/#/_/g')
+  LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+  cp index.html index.html.bak
+  if [[ -n $LINE ]]; then
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 5)d" index.html.tmp > index.html
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 4)a\\`echo -e '\n\r'`<div class=\"description\">$DESCRIPTION<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
+  else
+    echo "Site \"$SITEID\" doesn't exists!"
+    exit -1
+  fi
+  echo "Done."
+
+
+elif [[ $1 = 'icon' ]]; then
+  SITEID="$2"
+  ICON="$3"
+  ICON=$(echo $ICON | sed 's/\//\\\//g' | sed 's/&/\\&/g' | sed 's/#/_/g')
+  LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
+  cp index.html index.html.bak
+  if [[ -n $LINE ]]; then
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 2)d" index.html.tmp > index.html
+    cp index.html index.html.tmp
+    sed "$(expr $LINE + 1)a\\`echo -e '\n\r'`<img class=\"ui avatar image\" src=\"$ICON\">\\`echo -e '\n\r'`" index.html.tmp > index.html
+  else
+    echo "Site \"$SITEID\" doesn't exists!"
+    exit -1
+  fi
+  echo "Done."
 
 elif [[ $1 = 'rm' ]]; then
   SITEID="$2"
@@ -104,6 +153,10 @@ elif [[ $1 = 'rm' ]]; then
     exit -1
   fi
 
+elif [[ $1 = 'vi' ]]; then
+  SITEID="$2/hts-cache/doit.log"
+  vi "$SITEID"
+
 else
-  echo 'Usage: htt [clone|update|rm] URL'
+  echo 'Usage: htt [clone|update|rm|vi|title|description|icon] URL'
 fi
