@@ -59,6 +59,7 @@ elif [[ $1 = 'update' ]]; then
   if [[ -e "$SITEID" ]] ; then
     cd "$SITEID"
     httrack --update
+    cd ..
     LINE=$(grep -n "<a href=\"$SITEID\/index.html\">" index.html | cut -f1 -d: | head -1)
     cp index.html index.html.bak
     if [[ -n $LINE ]]; then
