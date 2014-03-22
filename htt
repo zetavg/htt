@@ -41,7 +41,7 @@ if [[ $1 = 'clone' ]]; then
     sed "$(expr $LINE + 7)d" index.html.tmp > index.html
     cp index.html index.html.tmp
     sed "$(expr $LINE + 6)a\\`echo -e '\n\r'`<div class=\"date\">$DATE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
-    if [[ -e "$SITEID/favicon.ico" ]] ; then
+    if [[ -e "$SITEID/$SITEID/favicon.ico" ]] ; then
       cp index.html index.html.tmp
       sed "$(expr $LINE + 2)d" index.html.tmp > index.html
       cp index.html index.html.tmp
@@ -63,7 +63,7 @@ elif [[ $1 = 'update' ]]; then
       sed "$(expr $LINE + 7)d" index.html.tmp > index.html
       cp index.html index.html.tmp
       sed "$(expr $LINE + 6)a\\`echo -e '\n\r'`<div class=\"date\">$DATE<\/div>\\`echo -e '\n\r'`" index.html.tmp > index.html
-      if [[ -e "$SITEID/favicon.ico" ]] ; then
+      if [[ -e "$SITEID/$SITEID/favicon.ico" ]] ; then
         cp index.html index.html.tmp
         sed "$(expr $LINE + 2)d" index.html.tmp > index.html
         cp index.html index.html.tmp
