@@ -199,14 +199,36 @@
       };
     </script>
     <script>
+      jQuery.fn.selectText = function(){
+        var doc = document
+          , element = this[0]
+          , range, selection
+        ;
+        if (doc.body.createTextRange) {
+          range = document.body.createTextRange();
+          range.moveToElementText(element);
+          range.select();
+        } else if (window.getSelection) {
+          selection = window.getSelection();
+          range = document.createRange();
+          range.selectNodeContents(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      };
+    </script>
+    <script>
       $(window).resize(updateView);
       $(window).scroll(updateView);
       function updateView() {
         $('.form-sticky-wrapper .form-sticky-wrapper, .form-sticky-wrapper .sticky-element').outerWidth($('.form-sticky-wrapper').width());
       }
-      $(document).ready(function() {
+      $(document).ready(function () {
         $('.form').sticky({wrapperClassName: 'form-sticky-wrapper', topSpacing: 12, bottomSpacing: 0, getWidthFrom: ''});
         $('.search').focus();
+        $('.search').keydown(function () {
+          $(window).scrollTop(0);
+        });
         var siteList = new List('site-list', {
           valueNames: ['title', 'description', 'date'],
           item: '<li><h3 class="name"></h3><p class="born"></p></li>',
@@ -234,12 +256,12 @@
           });
         });
         $('.actions .setting').on('click', function (e) {
-          $('div.list .popup').mouseenter(function() {
+          $('div.list .popup').mouseenter(function () {
             $('div.list > a').on('click', function (e) {
               e.preventDefault();
             });
           });
-          $('div.list .popup').mouseleave(function() {
+          $('div.list .popup').mouseleave(function () {
             $('div.list > a').unbind('click');
           });
           $('code').click(function (e) {
@@ -249,7 +271,7 @@
             $(this).selectText();
           });
         });
-        $('div.list > a').mouseleave(function() {
+        $('div.list > a').mouseleave(function () {
           $('.actions .setting').popup('remove');
         });
         $('.actions .setting i').popup({
